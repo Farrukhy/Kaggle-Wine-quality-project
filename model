@@ -1,1 +1,8 @@
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.impute import SimpleImputer
 
+imputer = SimpleImputer(strategy='mean')
+X_train_imputed = pd.DataFrame(imputer.fit_transform(X_train), columns=X_train.columns)
+
+classifier = GradientBoostingClassifier(n_estimators=1000)
+classifier.fit(X_train_imputed, y_train)
