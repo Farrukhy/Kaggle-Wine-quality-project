@@ -1,1 +1,100 @@
 
+
+# scripts/data_preprocessing.py
+
+from sklearn.model_selection import train_test_split
+
+def split_data(X, y):
+    # Split data into 80% training and 20% test
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Split training data into 90% training and 10% validation
+    X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=0.1, random_state=42)
+
+    return X_train, X_validation, X_test, y_train, y_validation, y_test
+
+# scripts/clean_data.py
+
+def clean_df(df, column_names, threshold=10):
+    for column_name in column_names:
+        titles = list(df[column_name])
+        di = {}
+
+        for title in titles:
+            if title not in di:
+                di[title] = 1
+            else:
+                di[title] += 1
+
+        li = [key for (key, value) in di.items() if value < threshold]
+
+        for name in li:
+            mask = df[column_name] == name
+            df = df[~mask]
+
+    return df
+
+# scripts/visualization.py
+
+from matplotlib import pyplot as plt
+import numpy as np
+
+def data_analysis(df, column_name, color, text_height=0.02, text_width=0.05):
+    counts = df[column_name].value_counts().values 
+    cls_names = df[column_name].value_counts().keys()
+    width, text_width, text_height = 0.3, text_width, 0.8
+    fig, ax = plt.subplots(figsize=(15,5))
+    indices = np.arange(len(counts))
+
+    ax.bar(indices, counts, width, color=color)
+    ax.set_xlabel("Horizontal", color="orange")
+    ax.set_xticklabels(cls_names, rotation=60)
+    ax.set(xticks=indices, xticklabels=cls_names)
+    ax.set_ylabel('Vertical', color='grey')
+
+    for i, v in enumerate(counts):
+        ax.text(i - text_width, v + text_height, str(v), color="green")
+
+    plt.show()
+
+def visualize_clusters(X, y_means, num_clusters):
+    colors = ['lightgrey', 'green', 'skyblue', 'red', 'purple']
+    for i in range(num_clusters):
+        plt.scatter(X.iloc[y_means == i, 0], X.iloc[y_means == i, 1], color=colors[i], label=f'Cluster {i+1}')
+
+    plt.title('KMeans Clustering')
+    plt.xlabel('Feature 1')
+    plt.ylabel('Feature 2')
+    plt.legend()
+    plt.show()
+
+
+# scripts/clustering_analysis.py
+
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+
+def elbow_method(X):
+    inertias = []
+    for number_clusters in range(1, 11):
+        km = KMeans(n_clusters=number_clusters, random_state=42)
+        km.fit_predict(X)
+        inertias.append(km.inertia_)
+
+    plt.plot(range(1, 11), inertias)
+    plt.title("Elbow Method")
+    plt.xlabel("Number of Clusters")
+    plt.ylabel("Inertia")
+    plt.show()
+
+# scripts/evaluate_model.py
+
+from sklearn.metrics import accuracy_score
+import pandas as pd
+
+def evaluate_model(X_test, y_test, classifier, imputer):
+    X_test_imputed = pd.DataFrame(imputer.transform(X_test), columns=X_test.columns)
+    y_pred = classifier.predict(X_test_imputed)
+    accuracy = accuracy_score(y_true=y_test, y_pred=y_pred)
+    print(f"Model Accuracy: {accuracy:.3f}")
+
